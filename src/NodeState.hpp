@@ -30,16 +30,19 @@ public:
 
   /// Returns vector of connections ID.
   /// Some of them can be empty (null)
-  std::vector<std::weak_ptr<Connection> > const&
+  std::vector<std::vector<std::weak_ptr<Connection>>> const&
   getEntries(PortType portType) const;
 
-  std::vector<std::weak_ptr<Connection> > &
+  std::vector<std::vector<std::weak_ptr<Connection>>> &
   getEntries(PortType portType);
 
-  std::shared_ptr<Connection>
+  std::vector<std::shared_ptr<Connection>>
   connection(PortType portType,
-             PortIndex portIndex) const;
+             PortIndex portIndex = -1) const;
 
+  void
+  removeConnection(PortType portType,
+                   std::shared_ptr<Connection> connection);
   void
   setConnection(PortType portType,
                 PortIndex portIndex,
@@ -71,9 +74,9 @@ public:
   resizing() const;
 
 private:
-
-  std::vector<std::weak_ptr<Connection> > _inConnections;
-  std::vector<std::weak_ptr<Connection> > _outConnections;
+  
+  std::vector<std::vector<std::weak_ptr<Connection>>> _inConnections;
+  std::vector<std::vector<std::weak_ptr<Connection>>> _outConnections;
 
   ReactToConnectionState _reaction;
   PortType     _reactingPortType;

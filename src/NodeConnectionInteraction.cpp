@@ -102,7 +102,11 @@ disconnect(PortType portToDisconnect) const
   NodeState &state = _node->nodeState();
 
   // clear pointer to Connection in the NodeState
-  state.getEntries(portToDisconnect)[portIndex].reset();
+  if(portToDisconnect == PortType::In) {
+    state.getEntries(portToDisconnect)[portIndex][0].reset();
+  } else {
+    state.removeConnection(PortType::Out, _connection);
+  }
 
   // 4) Propagate invalid data to IN node
   _connection->propagateEmptyData();
@@ -185,6 +189,11 @@ nodePortIsEmpty(PortType portType, PortIndex portIndex) const
   NodeState const & nodeState = _node->nodeState();
 
   auto const & entries = nodeState.getEntries(portType);
+  bool empty = true;
+  for(auto &e : entries[portIndex]) {
+    if(e.lock())
+      empty = false;
+  }
 
-  return (!entries[portIndex].lock());
+  return empty;
 }

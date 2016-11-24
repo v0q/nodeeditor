@@ -87,6 +87,9 @@ void
 FlowScene::
 deleteConnection(std::shared_ptr<Connection> connection)
 {
+  if(connection.get()->getPortIndex(PortType::Out) != -1)
+    connection.get()->getNode(PortType::Out).lock().get()->nodeState().removeConnection(PortType::Out, connection);
+
   _connections.erase(connection->id());
 }
 
@@ -146,10 +149,15 @@ removeNode(QGraphicsItem* item)
     auto nodeState = node->nodeState();
     auto const & nodeEntries = nodeState.getEntries(portType);
 
-    for (std::weak_ptr<Connection> conn : nodeEntries)
+    for(std::vector<std::weak_ptr<Connection>> ports : nodeEntries)
     {
-      if (auto c = conn.lock())
-        this->deleteConnection(c);
+      for(auto &conn : ports)
+      {
+        if(auto c = conn.lock()) {
+          nodeState.removeConnection(portType, c);
+          this->deleteConnection(c);
+        }
+      }
     }
   };
 

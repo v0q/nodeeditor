@@ -11,7 +11,7 @@ NodeState(std::unique_ptr<NodeDataModel> const &model)
   , _resizing(false)
 {}
 
-std::vector<std::weak_ptr<Connection> > const&
+std::vector<std::vector<std::weak_ptr<Connection>>> const&
 NodeState::
 getEntries(PortType portType) const
 {
@@ -24,7 +24,7 @@ getEntries(PortType portType) const
 }
 
 
-std::vector<std::weak_ptr<Connection> > &
+std::vector<std::vector<std::weak_ptr<Connection>>> &
 NodeState::
 getEntries(PortType portType)
 {
@@ -37,13 +37,29 @@ getEntries(PortType portType)
 }
 
 
-std::shared_ptr<Connection>
+std::vector<std::shared_ptr<Connection>>
 NodeState::
 connection(PortType portType, PortIndex portIndex) const
 {
   auto const &connections = getEntries(portType);
+  std::vector<std::shared_ptr<Connection>> c;
+  if(portIndex != -1 && connections.size())
+  {
+    for(auto const &conn : connections[portIndex]) {
+      c.push_back(conn.lock());
+    }
+  }
+  else
+  {
+    for(auto const &port : connections)
+    {
+      for(auto const &conn : port) {
+        c.push_back(conn.lock());
+      }
+    }
+  }
 
-  return connections[portIndex].lock();
+  return c;
 }
 
 
@@ -55,7 +71,47 @@ setConnection(PortType portType,
 {
   auto &connections = getEntries(portType);
 
-  connections[portIndex] = connection;
+  unsigned int i = 0;
+  for(auto &conn : connections[portIndex])
+  {
+    if(!conn.lock()) {
+      connections[portIndex].erase(connections[portIndex].begin() + i);
+    }
+    ++i;
+  }
+
+  if(portType == PortType::Out) {
+    connections[portIndex].push_back(connection);
+  } else {
+    if(!connections[portIndex].size())
+    {
+      connections[portIndex].resize(1);
+    }
+    connections[portIndex][0] = connection;
+  }
+}
+
+void
+NodeState::
+removeConnection(PortType portType,
+                 std::shared_ptr<Connection> connection)
+{
+  auto &connections = getEntries(portType);
+
+  for(auto &port : connections)
+  {
+    unsigned int i = 0;
+    for(auto &conn : port)
+    {
+      if((conn.lock()).get() == connection.get()) {
+        break;
+      }
+      ++i;
+    }
+    if(port.begin() + i != port.end()) {
+      port.erase(port.begin() + i);
+    }
+  }
 }
 
 
