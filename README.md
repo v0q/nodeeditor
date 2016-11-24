@@ -45,3 +45,8 @@ and create nodes in the scene. Data propagation works as well.
 
 ![Calculator](https://bitbucket.org/paceholder/nodeeditor/raw/master/pictures/calculator.png)
 
+### Modifications
+
+Fork of the NodeEditor, modified to allow multiple connections from a single output. Saving/loading/restoring not implemented. Quick base to improve/implement on. Modified by Teemu Lindborg.
+
+![Calculator modified](modified.png)
